@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="sl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#14213d">
+  <title>TPP - interaktivni izpitni kviz</title>
+  <style>
+    :root{--navy:#14213d;--blue:#2867d6;--paper:#f5f7fb;--ink:#172033;--muted:#657089;--line:#dfe5ef;--good:#16834b;--goodbg:#eaf8f0;--bad:#bd2c2c;--badbg:#fff0f0;--gold:#fca311}
+    *{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    button,input,select{font:inherit}.shell{max-width:800px;margin:auto;padding:18px 14px 80px}.hero{background:linear-gradient(135deg,var(--navy),#244d88);color:white;padding:24px;border-radius:20px;box-shadow:0 12px 32px #14213d22}
+    h1{font-size:clamp(25px,6vw,40px);line-height:1.08;margin:0 0 8px}.hero p{margin:0;color:#dce8ff}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px}.stat{background:#ffffff17;border:1px solid #ffffff22;border-radius:12px;padding:10px;text-align:center}.stat b{display:block;font-size:20px}.stat span{font-size:12px;color:#dce8ff}
+    .panel,.card{background:white;border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 28px #24314d0d}.panel{padding:18px;margin-top:14px}.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.controls label{font-size:13px;color:var(--muted)}select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:white;margin-top:4px}
+    .actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}button{border:0;border-radius:11px;padding:11px 15px;font-weight:750;cursor:pointer}.primary{background:var(--blue);color:white}.secondary{background:#e9eef8;color:var(--navy)}.danger{background:#fff0f0;color:var(--bad)}button:disabled{opacity:.45;cursor:not-allowed}
+    .progress-wrap{height:9px;background:#e8edf5;border-radius:99px;overflow:hidden;margin:17px 0 10px}.progress{height:100%;width:0;background:linear-gradient(90deg,var(--gold),#ffca63);transition:width .25s}.meta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:13px}
+    .card{padding:clamp(18px,5vw,30px);margin-top:12px}.badge{display:inline-block;background:#e9f0ff;color:#2456a7;border-radius:99px;padding:5px 9px;font-size:12px;font-weight:800}.type{margin-left:6px;background:#fff3d9;color:#805500}.question{font-size:clamp(20px,4.8vw,27px);line-height:1.25;margin:16px 0 18px}
+    .options{display:grid;gap:10px}.option{display:flex;gap:12px;align-items:flex-start;border:2px solid var(--line);padding:13px;border-radius:13px;cursor:pointer;transition:.15s;background:white}.option:hover{border-color:#aebed9}.option input{margin-top:4px;min-width:18px;min-height:18px;accent-color:var(--blue)}.option.correct{border-color:var(--good);background:var(--goodbg)}.option.wrong{border-color:var(--bad);background:var(--badbg)}.option.missed{border-color:var(--good);border-style:dashed}
+    .feedback{display:none;margin-top:16px;padding:15px;border-radius:13px}.feedback.show{display:block}.feedback.good{background:var(--goodbg);border-left:5px solid var(--good)}.feedback.bad{background:var(--badbg);border-left:5px solid var(--bad)}.feedback h3{margin:0 0 5px}.feedback p{margin:0}.nav{display:flex;justify-content:space-between;gap:10px;margin-top:17px}
+    .result{text-align:center}.result .big{font-size:54px;font-weight:900;color:var(--navy)}.result h2{margin:4px 0}.result p{color:var(--muted)}.hidden{display:none!important}.note{font-size:13px;color:var(--muted);margin:12px 0 0}.source{font-size:12px;color:var(--muted);margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
+    @media(max-width:520px){.controls{grid-template-columns:1fr}.shell{padding-top:8px}.hero{border-radius:15px;padding:20px}.panel,.card{border-radius:15px}.actions button{flex:1}.nav button{flex:1}.stats{gap:5px}.stat{padding:8px 4px}}
+  </style>
+</head>
+<body>
+<main class="shell">
+  <section class="hero">
+    <h1>TPP izpitni kviz</h1>
+    <p>Tehnični predpisi in projektiranje v mehatroniki</p>
+    <div class="stats">
+      <div class="stat"><b id="totalStat">0</b><span>vprašanj</span></div>
+      <div class="stat"><b id="bestStat">0%</b><span>najboljši rezultat</span></div>
+      <div class="stat"><b id="wrongStat">0</b><span>za ponoviti</span></div>
+    </div>
+  </section>
+
+  <section id="setup" class="panel">
+    <div class="controls">
+      <label>Tema
+        <select id="category"><option value="Vse">Vse teme</option></select>
+      </label>
+      <label>Dolžina kviza
+        <select id="length">
+          <option value="20">20 vprašanj</option>
+          <option value="40">40 vprašanj</option>
+          <option value="all">Vsa vprašanja</option>
+        </select>
+      </label>
+    </div>
+    <div class="actions">
+      <button class="primary" id="start">Začni nov kviz</button>
+      <button class="secondary" id="resume">Nadaljuj</button>
+      <button class="secondary" id="retryWrong">Ponovi napačne</button>
+      <button class="danger" id="reset">Izbriši napredek</button>
+    </div>
+    <p class="note">Pri vprašanju je vedno jasno napisano, ali je pravilen en odgovor ali več odgovorov.</p>
+  </section>
+
+  <section id="quiz" class="hidden">
+    <div class="progress-wrap"><div id="progress" class="progress"></div></div>
+    <div class="meta"><span id="counter"></span><span id="liveScore"></span></div>
+    <article class="card">
+      <div><span id="catBadge" class="badge"></span><span id="typeBadge" class="badge type"></span></div>
+      <h2 id="question" class="question"></h2>
+      <div id="options" class="options"></div>
+      <div id="feedback" class="feedback"><h3 id="feedbackTitle"></h3><p id="explanation"></p></div>
+      <div class="nav">
+        <button class="secondary" id="quit">Nazaj</button>
+        <button class="primary hidden" id="check">Preveri odgovor</button>
+        <button class="primary hidden" id="next">Naslednje vprašanje</button>
+      </div>
+      <div id="source" class="source"></div>
+    </article>
+  </section>
+
+  <section id="result" class="card result hidden">
+    <div id="resultPct" class="big">0%</div>
+    <h2 id="resultTitle"></h2>
+    <p id="resultText"></p>
+    <div class="actions" style="justify-content:center">
+      <button class="primary" id="again">Nov kviz</button>
+      <button class="secondary" id="resultWrong">Ponovi napačne</button>
+    </div>
+  </section>
+</main>
+
+<script>
+const Q = [
+// Obstoječa vprašanja iz dokumenta, vsebinsko preverjena in jezikovno očiščena.
+{c:"Pravo in EU",o:1,q:"Neposredni prevzem pravil mednarodnega prava v slovensko zakonodajo je mogoč, kadar ...",a:["je Slovenija članica EU","se je Slovenija na področju odrekla suverenosti","slovenski zakon ali podzakonski akt neposredno vsebuje določbe mednarodne pogodbe","si slovenska zakonodaja in pravo EU nasprotujeta"],k:[2],e:"Neposredni prevzem pomeni, da domači zakon ali podzakonski akt neposredno povzame določbe podpisane mednarodne pogodbe. Članstvo v EU samo po sebi ni ta postopek."},
+{c:"Pravo in EU",o:1,q:"Odločba EU spada med ...",a:["sekundarno pravo EU","terciarno pravo EU","primarno pravo EU"],k:[0],e:"Odločba je normativni akt institucij EU in zato del sekundarnega prava. Zavezuje naslovnike, ki so v njej določeni."},
+{c:"Standardizacija",o:1,q:"Katere lastnosti veljajo za standarde?",a:["Opisujejo čim več variacij izdelkov","Vzpostavljajo urejenost","So namenjeni samo industriji","Nastanejo s konsenzom"],k:[1,3],e:"Standard je dokument, ki nastane s konsenzom, sprejme ga priznani organ in je usmerjen v doseganje splošne urejenosti."},
+{c:"Standardizacija",o:1,q:"Kaj velja za harmonizirani evropski standard?",a:["Je pogoj za vsako namestitev oznake CE","Njegova uporaba je vedno obvezna","Ustvarja domnevo o skladnosti","Podpira bistvene zahteve zakonodaje EU"],k:[2,3],e:"Uporaba harmoniziranega standarda je praviloma prostovoljna, vendar daje domnevo o skladnosti z zahtevami, ki jih standard pokriva."},
+{c:"Kakovost",o:1,q:"Katero je pravilno zaporedje cikla PDCA?",a:["Planiraj - Izvedi - Preveri - Ukrepaj","Izvedi - Planiraj - Ukrepaj - Preveri","Planiraj - Preveri - Izvedi - Ukrepaj","Preveri - Izvedi - Planiraj - Ukrepaj"],k:[0],e:"PDCA pomeni Plan-Do-Check-Act: planiraj, izvedi, preveri in ukrepaj."},
+{c:"Gradbeništvo",o:1,q:"V katerih primerih se praviloma zahteva gradbeno dovoljenje?",a:["Za običajno vzdrževanje objekta","Za rekonstrukcijo objekta","Pri spremembi namembnosti objekta","Za izvršitev izrečenega inšpekcijskega ukrepa"],k:[1,2],e:"Gradbeno dovoljenje je zahtevano za novogradnjo, rekonstrukcijo in spremembo namembnosti. Za vzdrževanje in izvršitev inšpekcijskega ukrepa praviloma ni potrebno."},
+{c:"Standardizacija",o:1,q:"Kaj velja za standarde tipa A?",a:["Predstavljajo osnovne varnostne koncepte in načela","Sami praviloma ne zadoščajo za domnevo o skladnosti z vsemi bistvenimi zahtevami","Veljajo za posamezno vrsto stroja","Obravnavajo samo posamezne varnostne naprave"],k:[0,1],e:"Tip A podaja temeljne koncepte in načela za vse stroje. Standardi za posamezno vrsto stroja so tipa C."},
+{c:"Varnost strojev",o:1,q:"Katere značilnosti so del osnovne definicije stroja po Direktivi o strojih?",a:["Opremljen je ali je namenjen opremi s pogonskim sistemom, ki ni neposredno človeška ali živalska sila","Vedno je namenjen vgradnji v drug stroj","Vsi deli so togo povezani in negibljivi","Je sklop povezanih delov, od katerih je vsaj eden gibljiv"],k:[0,3],e:"Za stroj sta bistvena sklop povezanih delov z vsaj enim gibljivim delom in pogonski sistem, ki ni neposredno človeška ali živalska sila."},
+{c:"Varnost strojev",o:1,q:"Katero je pravilno zaporedje tristopenjske metode zmanjševanja tveganja?",a:["Vgrajena varnost - varovala in dopolnilni ukrepi - informacije za uporabo","Varovala - osebna varovalna oprema - vgrajena varnost","Navodila - ograjevanje - vgrajena varnost","Osebna varovalna oprema - opozorila - varovala"],k:[0],e:"Najprej se tveganje zmanjša z varno zasnovo, nato z varovali in dopolnilnimi ukrepi, šele nato z informacijami za uporabo."},
+{c:"Varnost strojev",o:1,q:"Vgrajena varnost pomeni predvsem ...",a:["vgradnjo čim več varnostnih komponent","odpravo ali zmanjšanje tveganj že v fazi načrtovanja","vgradnjo stroja v drug varen stroj","uporabo postopka LOTO"],k:[1],e:"Vgrajena varnost je lastnost zasnove: nevarnost se odpravi ali tveganje zmanjša že s konstrukcijskimi rešitvami."},
+{c:"Ocena tveganja",o:1,q:"Katero je pravilno zaporedje ocene tveganja?",a:["Omejitve stroja - prepoznavanje nevarnosti - ugotavljanje elementov tveganja - vrednotenje tveganja","Nevarnosti - vrednotenje - omejitve - elementi tveganja","Vrednotenje - nevarnosti - ukrepi - omejitve","Omejitve - vrednotenje - nevarnosti - dokumentacija"],k:[0],e:"Najprej določimo omejitve stroja, nato nevarnosti, ocenimo elemente tveganja in na koncu presodimo, ali je tveganje sprejemljivo."},
+{c:"Varnost strojev",o:1,q:"Za katere ukrepe pri uporabi stroja je prvenstveno odgovoren uporabnik oziroma delodajalec?",a:["Za osnovno konstrukcijsko ograjevanje novega stroja","Za pripravo proizvajalčevih navodil","Za uporabo osebne varovalne opreme","Za organizacijske ukrepe in varne postopke dela"],k:[2,3],e:"Proizvajalec zagotovi varno zasnovo, varovala in informacije. Uporabnik oziroma delodajalec zagotovi organizacijske ukrepe, usposabljanje in potrebno osebno varovalno opremo."},
+{c:"Funkcionalna varnost",o:1,q:"Kako zmanjšamo verjetnost nevarne odpovedi varnostnih funkcij?",a:["Z diagnosticiranjem možnih napak","Samo z ograjevanjem nevarnih delov","Z uporabo zanesljivih varnostnih komponent","Samo z opozorili o preostalih nevarnostih"],k:[0,2],e:"Na zanesljivost varnostne funkcije neposredno vplivajo zanesljive komponente, primerna arhitektura in diagnostika napak."},
+{c:"Funkcionalna varnost",o:1,q:"Kaj je varnostna funkcija stroja?",a:["Funkcija, katere odpoved lahko povzroči takojšnje povečanje tveganja","Vsaka funkcija, katere odpoved povzroči alarm","Funkcija, ki sama zagotavlja varnost v prav vseh fazah življenjskega cikla","Vsaka običajna delovna funkcija stroja"],k:[0],e:"To je definicija varnostne funkcije po funkcionalni varnosti. Primer je zaustavitev nevarnega gibanja ob odprtju varovala."},
+{c:"Varnost strojev",o:1,q:"S čim lahko zagotovimo varnost pri transportu stroja?",a:["Z ustreznimi transportnimi sredstvi","Z označitvijo težišča tovora, kadar je to potrebno","Z ustreznimi pritrdilnimi oziroma dvižnimi mesti na stroju","Z navedbo težnega pospeška na zaboju"],k:[0,1,2],e:"Stroj mora omogočati varno prijemanje, dvigovanje in pritrditev; pri nejasni porazdelitvi mase je pomembna tudi označitev težišča."},
+{c:"Varovala",o:1,q:"Kaj velja za varovalno opremo?",a:["Vedno mora tvoriti fizično pregrado","Lahko fizično preprečuje dostop do nevarnega gibanja","Če stika fizično ne preprečuje, mora biti nameščena najmanj na razdalji S = K × T + C","Pravilna formula je S = K / T + C"],k:[1,2],e:"Varovala so lahko fizična, zaznavalna oprema pa ne prepreči prehoda fizično. Takrat je ključna varnostna razdalja S = K × T + C."},
+{c:"Varovala",o:1,q:"Kaj pomeni vpadna razdalja C v formuli S = K × T + C?",a:["Pot do sprožitve zaščitne naprave","Dodatno razdaljo, ki jo lahko del telesa doseže v nevarno območje, preden se nevarno gibanje ustavi","Razdaljo do zvočnega alarma","Celotno razdaljo od delavca do stroja"],k:[1],e:"C upošteva možnost vdora oziroma dosega dela telesa proti nevarnosti pred popolno zaustavitvijo."},
+{c:"Funkcionalna varnost",o:1,q:"Kaj pomeni zanesljivost sistema?",a:["Verjetnost, da bo sistem v določenih pogojih opravljal funkcijo določen čas","Da je sistem brez diagnostike","Da R = 0 pomeni popolno zanesljivost","Da se zanesljivost s časom ne spreminja"],k:[0],e:"Zanesljivost je časovno odvisna verjetnost pravilnega delovanja v določenih pogojih. Popolnoma zanesljiv sistem bi imel R = 1."},
+
+// Dodatna vprašanja iz zapiskov in izpitnih vprašanj.
+{c:"Mehatronika",q:"Katera področja sestavljajo mehatroniko v širšem pomenu?",a:["Strojništvo, elektrotehnika, informatika, vodenje, varnost in varovanje","Samo strojništvo in elektrotehnika","Gradbeništvo, medicina in ekonomija","Samo informatika in robotika"],k:[0],e:"Zapiski poudarjajo šest povezanih področij: strojništvo, elektrotehniko, informatiko, vodenje, safety in security."},
+{c:"Mehatronika",q:"Kakšna je razlika med varnostjo (safety) in varovanjem (security)?",a:["Safety ščiti ljudi pred proizvodom, security pa proizvod in sistem pred namernimi oziroma omrežnimi grožnjami","Pomena sta popolnoma enaka","Safety obravnava samo požar, security pa samo krajo","Security je del gradbenega dovoljenja"],k:[0],e:"Safety se osredotoča na preprečevanje poškodb zaradi stroja, security pa na zaščito povezanega sistema pred kibernetskimi in drugimi namernimi grožnjami."},
+{c:"Pravo in EU",q:"Kdaj je Slovenija postala članica Evropske unije?",a:["1. maja 2004","25. junija 1991","23. decembra 1990","1. januarja 2007"],k:[0],e:"Slovenija je postala članica EU 1. maja 2004 in s tem prevzela pravni red EU na prenesenih področjih."},
+{c:"Pravo in EU",q:"Kaj sestavlja primarno pravo EU?",a:["Ustanovne in druge temeljne pogodbe med državami članicami","Uredbe, direktive in odločbe","Samo nacionalni zakoni","Harmonizirani standardi"],k:[0],e:"Primarno pravo sestavljajo temeljne pogodbe, sekundarno pa akti institucij EU, sprejeti na njihovi podlagi."},
+{c:"Pravo in EU",q:"Kaj velja za uredbo EU?",a:["V celoti je zavezujoča in se neposredno uporablja v vseh državah članicah","Določa samo cilj, obliko prenosa pa izbere država","Ni pravno zavezujoča","Velja le za naslovnika, navedenega v aktu"],k:[0],e:"Uredba velja neposredno in je v celoti zavezujoča. Opis cilja in nacionalnega prenosa velja za direktivo."},
+{c:"Pravo in EU",q:"Kaj velja za direktivo EU?",a:["Države zavezuje glede cilja, način in obliko prenosa pa praviloma izberejo same","Vedno se uporablja neposredno kot nacionalni zakon","Ni pravno zavezujoča","Zavezuje samo eno imenovano podjetje"],k:[0],e:"Direktiva zahteva prenos v nacionalni pravni red in zavezuje glede rezultata, ki ga je treba doseči."},
+{c:"Pravo in EU",q:"Katera akta EU nista pravno zavezujoča?",a:["Priporočilo","Mnenje","Uredba","Odločba"],k:[0,1],e:"Priporočila in mnenja nimajo zavezujoče pravne moči, čeprav lahko usmerjajo ravnanje in razlago."},
+{c:"Pravo in EU",q:"Kaj v Sloveniji velja ob neskladju domačega in prevzetega mednarodnega prava?",a:["Primat mednarodnega prava","Vedno primat občinskega odloka","Pravila nimajo hierarhije","Vedno odloči proizvajalec"],k:[0],e:"Zapiski navajajo, da v Sloveniji velja primat mednarodnega prava nad domačim pravom."},
+{c:"Tehnična zakonodaja",q:"Kateri so trije temelji enotnega trga na področju tehničnih pravil?",a:["Preprečevanje novih ovir","Medsebojno priznavanje","Tehnična harmonizacija","Obvezna uporaba vseh standardov ISO"],k:[0,1,2],e:"Enotni trg temelji na preprečevanju novih tehničnih ovir, medsebojnem priznavanju in skupnih harmoniziranih pravilih."},
+{c:"Tehnična zakonodaja",q:"Koga predvsem bremeni Direktiva 2006/42/ES o strojih?",a:["Proizvajalca stroja","Samo končnega uporabnika","Samo gradbenega nadzornika","Nacionalni akreditacijski organ"],k:[0],e:"Direktiva o strojih določa obveznosti proizvajalca pri načrtovanju, izdelavi in dajanju stroja na trg."},
+{c:"Tehnična zakonodaja",q:"Koga predvsem bremeni Direktiva 2009/104/ES o uporabi delovne opreme?",a:["Delodajalca","Proizvajalca standardov","Evropsko komisijo","Projektanta stavbe"],k:[0],e:"Ta direktiva določa minimalne varnostne in zdravstvene zahteve pri uporabi delovne opreme, zato je ključni zavezanec delodajalec."},
+{c:"Tehnična zakonodaja",q:"Kaj pomeni dajanje proizvoda na trg?",a:["Ko je proizvod prvič dostopen v EU za distribucijo ali uporabo","Vsako poznejšo uporabo proizvoda","Samo izdelavo prototipa","Odstranitev proizvoda iz uporabe"],k:[0],e:"Dajanje na trg je prva dostopnost proizvoda na trgu EU, ne vsaka nadaljnja prodaja ali uporaba."},
+{c:"Tehnična zakonodaja",q:"Kdo je uvoznik?",a:["Oseba s sedežem v EU, ki daje proizvod iz tretje države na trg EU","Vsak končni uporabnik","Samo proizvajalec iz države članice","Organ za akreditacijo"],k:[0],e:"Uvoznik je gospodarski subjekt s sedežem v EU, ki na trg EU da proizvod iz tretje države."},
+{c:"Akreditacija",q:"Kaj je akreditacija?",a:["Formalna potrditev usposobljenosti organa za izvajanje določenih postopkov ugotavljanja skladnosti","Oznaka skladnosti na stroju","Dovoljenje za uporabo stavbe","Notranji pregled proizvoda brez meril"],k:[0],e:"Nacionalni akreditacijski organ z akreditacijo potrdi strokovno usposobljenost laboratorija, kontrolnega ali certifikacijskega organa."},
+{c:"Akreditacija",q:"Kdo v Sloveniji opravlja naloge nacionalne akreditacijske službe?",a:["Slovenska akreditacija","Inženirska zbornica Slovenije","SIQ kot edini možni organ","Državni zbor"],k:[0],e:"Nacionalni akreditacijski organ je javni zavod Slovenska akreditacija."},
+{c:"Akreditacija",q:"Kaj pomeni kalibracija oziroma umerjanje?",a:["Ugotavljanje povezave med prikazom merila in referenčnimi vrednostmi etalonov","Končni vizualni pregled stroja","Izdajo gradbenega dovoljenja","Potrditev usposobljenosti laboratorija"],k:[0],e:"Kalibracija primerja merilni instrument z referenčnimi vrednostmi in določi njegovo merilno obnašanje."},
+{c:"Akreditacija",q:"Kateri postopki spadajo med ugotavljanje skladnosti?",a:["Preskušanje","Kontrola","Certificiranje","Kalibracija"],k:[0,1,2,3],e:"Zapiski med postopke uvrščajo preskušanje, kalibracijo, kontrolo, certificiranje in preverjanje."},
+{c:"Standardizacija",q:"Kateri je bil pomemben začetek mednarodne standardizacije merskih sistemov?",a:["Metrska konvencija leta 1875","Maastrichtska pogodba leta 1992","Direktiva o strojih leta 2006","Ustanovitev EU leta 2004"],k:[0],e:"Podpis Metrske konvencije leta 1875 je pomemben mejnik uradne mednarodne standardizacije."},
+{c:"Standardizacija",q:"Kakšna je uporaba standardov praviloma?",a:["Prostovoljna, razen če predpis ali pogodba določi drugače","Vedno zakonsko obvezna","Prepovedana brez certifikata","Obvezna samo za mala podjetja"],k:[0],e:"Standard sam po sebi praviloma ni zakon. Obvezen lahko postane zaradi sklica v predpisu, pogodbi ali druge zaveze."},
+{c:"Standardizacija",q:"Katere organizacije so ključne na mednarodni ravni standardizacije?",a:["ISO","IEC","ITU","CEN"],k:[0,1,2],e:"ISO, IEC in ITU delujejo mednarodno. CEN je evropska organizacija za standardizacijo."},
+{c:"Standardizacija",q:"Katere organizacije so ključne na evropski ravni?",a:["CEN","CENELEC","ETSI","SIST"],k:[0,1,2],e:"CEN, CENELEC in ETSI so evropske organizacije. SIST je slovenski nacionalni organ."},
+{c:"Standardizacija",q:"Kaj obravnava standard SIST EN 60204-1?",a:["Električno opremo strojev","Oceno tveganja po HRN","Samo gradbeno dokumentacijo","Kibernetsko varnost bank"],k:[0],e:"EN 60204-1 določa splošne zahteve za električno opremo strojev, vključno z zaščito, krmiljenjem in dokumentacijo."},
+{c:"Standardizacija",q:"Kaj obravnavajo standardi tipa B1?",a:["Posamezne varnostne vidike, na primer varnostne razdalje","Posamezno vrsto stroja","Samo sisteme kakovosti","Osnovne koncepte za vse stroje"],k:[0],e:"B1 obravnava posamezne varnostne vidike; B2 pa posamezne vrste varovalnih naprav."},
+{c:"Standardizacija",q:"Kaj velja za standard tipa C?",a:["Nanaša se na določeno vrsto ali skupino strojev","Ob neskladju ima za zadevni stroj prednost pred določili tipa A ali B","Nikoli ne ustvarja domneve o skladnosti","Je splošni standard kakovosti"],k:[0,1],e:"Tip C vsebuje podrobne zahteve za konkreten stroj in ima pri razlikah prednost za področje, ki ga ureja."},
+{c:"Kakovost",q:"Na kaj je osredotočena kontrola kakovosti (QC)?",a:["Na odkrivanje in izločanje neustreznih končnih proizvodov","Na preprečevanje vseh napak že pri načrtovanju","Na stalno izboljševanje celotne organizacije","Samo na varnostno programsko opremo"],k:[0],e:"QC je predvsem reaktiven pristop, ki preverja končni proizvod in ločuje ustrezne od neustreznih."},
+{c:"Kakovost",q:"Kaj je bistvo zagotavljanja kakovosti (QA)?",a:["Preprečevanje napak z obvladovanjem procesov in vključevanjem odgovornosti","Samo končna kontrola izdelkov","Odprava vse dokumentacije","Merjenje brez ukrepanja"],k:[0],e:"QA je preventiven in procesno usmerjen pristop, pri katerem za kakovost odgovarjajo vsi ustrezni deli organizacije."},
+{c:"Kakovost",q:"Kaj je osredotočenost stalnega izboljševanja kakovosti (CQI)?",a:["Nenehno izboljševanje vseh procesov organizacije","Samo pregled končnega izdelka","Samo delo laboratorija","Enkratna odprava ene napake"],k:[0],e:"CQI uporablja procesni pristop in izboljšuje celotno organizacijo, ne le končnega proizvoda."},
+{c:"Kakovost",q:"Kaj pomeni razmišljanje na podlagi tveganja v ISO 9001?",a:["Proaktivno prepoznavanje tveganj in priložnosti","Čakanje na napako pred ukrepanjem","Odpravo vseh merljivih ciljev","Zavarovanje vsakega proizvoda"],k:[0],e:"Organizacija vnaprej prepozna možne negativne posledice in priložnosti ter načrtuje ustrezne ukrepe."},
+{c:"Kakovost",q:"Kaj mora imeti vsak dobro opredeljen proces?",a:["Vhode","Aktivnosti pretvorbe","Izhode","Odgovornosti in merila spremljanja"],k:[0,1,2,3],e:"Procesni pristop zahteva določene vhode, aktivnosti, izhode, odgovornosti, vire in način vrednotenja uspešnosti."},
+{c:"Kakovost",q:"Kdo določa politiko kakovosti?",a:["Najvišje vodstvo","Samo zunanji presojevalec","Vsak kupec posebej","Gradbeni inšpektor"],k:[0],e:"Najvišje vodstvo sprejme politiko kakovosti in zagotovi okvir za cilje, vire ter nenehno izboljševanje."},
+{c:"Gradbeništvo",q:"Kaj je gradbeno dovoljenje?",a:["Odločba, s katero se investitorju dovoljuje gradnja","Dokazilo o kalibraciji","Izjava ES o skladnosti stroja","Pogodba med izvajalcem in dobaviteljem"],k:[0],e:"Gradbeno dovoljenje je upravna odločba, ki pod določenimi pogoji dovoljuje nameravano gradnjo."},
+{c:"Gradbeništvo",q:"Kdaj gradbeno dovoljenje preneha veljati po zapiskih?",a:["Če investitor v petih letih od pravnomočnosti ne prijavi začetka gradnje","Vedno po enem letu","Takoj po izdaji uporabnega dovoljenja","Ko se zamenja izvajalec"],k:[0],e:"Zapiski navajajo petletni rok od pravnomočnosti za prijavo začetka del."},
+{c:"Gradbeništvo",q:"Kdo vloži zahtevo za gradbeno dovoljenje in prijavi začetek gradnje?",a:["Investitor","Nadzornik","Certifikacijski organ","Slovenska akreditacija"],k:[0],e:"Investitor je nosilec projekta: pridobi dovoljenja, prijavi začetek in zagotovi druge obveznosti."},
+{c:"Gradbeništvo",q:"Kaj je glavna naloga nadzornika?",a:["Spremlja skladnost gradnje s projektom, dovoljenjem in predpisi ter opozarja na kršitve","Izdaja evropske standarde","Proizvaja gradbene materiale","Samodejno nadomesti investitorja"],k:[0],e:"Nadzornik redno spremlja gradnjo, preverja kakovost in skladnost ter ukrepa ob napakah ali kršitvah."},
+{c:"Gradbeništvo",q:"Kaj pomeni kratica PZI?",a:["Projektna dokumentacija za izvedbo gradnje","Poročilo za zakonito inšpekcijo","Pravilnik za zanesljivost izdelkov","Projekt za izdajo izjave"],k:[0],e:"PZI daje izvajalcu strokovna navodila in podrobnosti za izvedbo gradnje."},
+{c:"Gradbeništvo",q:"Kaj pomeni kratica PID?",a:["Projektna dokumentacija izvedenih del","Predhodna izjava dobavitelja","Program notranje diagnostike","Projektna izjava direktive"],k:[0],e:"PID prikazuje dejansko izvedeno stanje in odstopanja ter je pomemben za uporabo in vzdrževanje objekta."},
+{c:"Varnost strojev",q:"Kaj mora proizvajalec storiti pred dajanjem stroja na trg?",a:["Zagotoviti izpolnitev bistvenih zdravstvenih in varnostnih zahtev","Pripraviti tehnično dokumentacijo","Izdati ES-izjavo o skladnosti","Namestiti oznako CE"],k:[0,1,2,3],e:"Vsi štirje koraki so temelj postopka dajanja stroja na trg po Direktivi 2006/42/ES."},
+{c:"Varnost strojev",q:"Kateri dokument se izda za delno dokončan stroj?",a:["Izjava o vgradnji","Uporabno dovoljenje","Akreditacijska listina","Vedno polna ES-izjava o skladnosti dokončanega stroja"],k:[0],e:"Delno dokončani stroj ne dobi običajne ES-izjave o skladnosti za dokončan stroj, temveč izjavo o vgradnji in navodila za sestavljanje."},
+{c:"Varnost strojev",q:"Kaj pomeni oznaka CE na stroju?",a:["Proizvajalec izjavlja in prevzema odgovornost za skladnost z veljavno zakonodajo EU","Stroj je izdelan v Evropi","Stroj nima nobenega preostalega tveganja","Stroj je certificiral ISO"],k:[0],e:"CE ni oznaka porekla ali absolutne varnosti. Je izjava proizvajalca o skladnosti z vsemi relevantnimi zahtevami EU."},
+{c:"Varnost strojev",q:"Kako mora biti oznaka CE nameščena?",a:["Vidno, čitljivo in trajno","Samo v navodilih","Skrito v električni omari","Začasno na embalaži"],k:[0],e:"Oznaka mora biti na stroju nameščena razločno, vidno in trajno v predpisani grafični obliki."},
+{c:"Varnost strojev",q:"Kako dolgo se po zapiskih praviloma hrani tehnična dokumentacija stroja?",a:["Najmanj 10 let","Šest mesecev","Dve leti","Samo do prve prodaje"],k:[0],e:"Tehnična mapa mora biti pristojnim organom na voljo najmanj deset let po izdelavi oziroma zadnji enoti serije."},
+{c:"Varnost strojev",q:"Kaj vsebuje tehnična dokumentacija stroja?",a:["Sestavne risbe in krmilne sheme","Oceno tveganja in opis zaščitnih ukrepov","Uporabljene standarde ter rezultate preskusov in izračunov","Izvod navodil za uporabo"],k:[0,1,2,3],e:"Tehnična mapa z zbranimi dokazi pokaže, kako je proizvajalec dosegel skladnost stroja."},
+{c:"Varnost strojev",q:"Kaj velja za ukaz za zaustavitev stroja?",a:["Imeti mora prednost pred ukazom za zagon","Izvede se samo ob izpadu elektrike","Ne sme vplivati na nevarno gibanje","Vedno mora biti brezkrmilen"],k:[0],e:"Krmilni sistem mora biti zasnovan tako, da ukaz za zaustavitev prevlada nad zagonom in varno ustavi nevarne funkcije."},
+{c:"Varnost strojev",q:"Kaj velja za ponovni zagon po ponastavitvi izklopa v sili?",a:["Ponastavitev sme zagon le omogočiti, ne pa ga samodejno sprožiti","Ponastavitev mora takoj zagnati stroj","Zagon ni nikoli več mogoč","Ponastavitev se izvede na poljubnem oddaljenem mestu"],k:[0],e:"Reset odstrani blokado, dejanski zagon pa mora zahtevati ločen nameren ukaz."},
+{c:"Varnost strojev",q:"Kakšna je razlika med kategorijama zaustavitve 0 in 1?",a:["Kategorija 0 takoj odklopi energijo, kategorija 1 pa najprej nadzorovano ustavi in nato odklopi energijo","Kategorija 1 je vedno hitrejša","Kategorija 0 je samo programska","Med njima ni razlike"],k:[0],e:"Kategorija 0 je nekontrolirana zaustavitev z neposrednim odklopom; kategorija 1 ohrani energijo toliko časa, da izvede nadzorovano ustavitev."},
+{c:"Varovala",q:"Kaj velja za zaporno varovalo?",a:["Nevarne funkcije so onemogočene, dokler je varovalo odprto","Odprtje med delovanjem sproži zaustavitev","Zaprtje varovala samo po sebi ne sme zagnati stroja","Vedno je nepomična kovinska ograja"],k:[0,1,2],e:"Zaporna naprava je povezana s krmiljem. Zaprtje le omogoči zagon, ne sme pa ga samo sprožiti."},
+{c:"Varovala",q:"Kdaj uporabimo zaklepanje varovala (guard locking)?",a:["Ko je čas zaustavitve dolg in mora varovalo ostati zaklenjeno do prenehanja nevarnosti","Pri vsakem pisarniškem računalniku","Samo med transportom","Namesto vsake ocene tveganja"],k:[0],e:"Če je mogoče nevarno območje doseči pred ustavitvijo, mora zaklep preprečiti odprtje do varnega stanja."},
+{c:"Ocena tveganja",q:"Kaj pomeni tveganje?",a:["Kombinacijo resnosti možne škode in verjetnosti njenega nastanka","Samo prisotnost nevarnosti","Samo strošek popravila","Vsako odstopanje od načrta"],k:[0],e:"Nevarnost je potencialni vir škode, tveganje pa povezuje možno resnost in verjetnost škode."},
+{c:"Ocena tveganja",q:"Katere vrste omejitev stroja določimo na začetku ocene tveganja?",a:["Omejitve uporabe","Prostorske omejitve","Časovne omejitve","Samo prodajno ceno"],k:[0,1,2],e:"Upoštevajo se predvidena in razumno predvidljiva napačna uporaba, doseg in prostor ter življenjska doba in časovne omejitve."},
+{c:"Ocena tveganja",q:"Kako se izračuna HRN po zapiskih?",a:["HRN = S × N × F × O","HRN = S + N + F + O","HRN = K × T + C","HRN = MTTFd / DC"],k:[0],e:"Metoda HRN pomnoži resnost, število izpostavljenih oseb, pogostost izpostavljenosti in verjetnost dogodka."},
+{c:"Ocena tveganja",q:"Kateri parameter HRN predstavlja pogostost izpostavljenosti?",a:["F","S","N","O"],k:[0],e:"F je frequency, S severity, N number of persons, O pa occurrence oziroma verjetnost dogodka."},
+{c:"LOTO",q:"Kaj je glavni namen postopka LOTO?",a:["Preprečiti nepričakovano sprostitev nevarnih energij med vzdrževanjem","Pospešiti običajni zagon stroja","Nadomestiti navodila za uporabo","Označiti stroj z oznako CE"],k:[0],e:"Lockout/Tagout zagotovi izolacijo, zaklep, označitev in preverjanje brezenergetskega stanja pred delom."},
+{c:"LOTO",q:"Katere vire energije moramo pri LOTO upoštevati?",a:["Električno, hidravlično in pnevmatsko energijo","Potencialno in kinetično energijo","Energijo v kondenzatorjih, tlačnih posodah in vzmeteh","Samo električno energijo"],k:[0,1,2],e:"Upoštevati je treba vse dovajane in nakopičene energije, ne le električne."},
+{c:"LOTO",q:"Kateri je zadnji ključni korak pred začetkom vzdrževalnega dela?",a:["Preverjanje brezenergetskega stanja","Namestitev oznake CE","Ponovni zagon stroja","Odstranitev vseh ključavnic"],k:[0],e:"Po izolaciji, zaklepanju in označevanju je treba praktično preveriti, da je stroj res brez nevarne energije."},
+{c:"Funkcionalna varnost",q:"Iz katerih treh osnovnih blokov je sestavljena varnostna funkcija?",a:["Vhod - logika - izhod","Senzor - motor - uporabnik","Načrt - proizvodnja - prodaja","Opozorilo - pogodba - certifikat"],k:[0],e:"Primer je tipka za izklop v sili kot vhod, varnostni rele ali PLC kot logika in kontaktor kot izhod."},
+{c:"Funkcionalna varnost",q:"Kaj označuje PLr?",a:["Zahtevani performančni nivo varnostne funkcije","Dejanski čas ustavitve stroja","Razred gradbenega dovoljenja","Raven kakovosti dokumentacije"],k:[0],e:"PLr je required Performance Level, določen z oceno resnosti, pogostosti izpostavljenosti in možnosti izognitve."},
+{c:"Funkcionalna varnost",q:"Kateri parametri se uporabljajo za določitev PLr z grafom tveganja?",a:["S - resnost poškodbe","F - pogostost oziroma trajanje izpostavljenosti","P - možnost izognitve ali omejitve škode","C - vpadna razdalja"],k:[0,1,2],e:"Graf tveganja ISO 13849-1 uporablja S, F in P. C je parameter formule za varnostno razdaljo."},
+{c:"Funkcionalna varnost",q:"Kaj pomeni MTTFd?",a:["Srednji čas do nevarne odpovedi","Najdaljši čas do popravila","Minimalno tehnično testno frekvenco","Mero diagnostične pokritosti"],k:[0],e:"MTTFd ocenjuje pričakovani srednji čas do nevarne odpovedi komponente ali kanala."},
+{c:"Funkcionalna varnost",q:"Kaj pomeni DC?",a:["Diagnostično pokritje - delež nevarnih napak, ki jih diagnostika zazna","Dvosmerni tok","Čas delovanja komponente","Dokument o skladnosti"],k:[0],e:"Višje diagnostično pokritje pomeni večjo sposobnost sistema zaznati nevarne napake."},
+{c:"Funkcionalna varnost",q:"Kaj pomeni CCF?",a:["Odpoved iz skupnega vzroka, ki lahko prizadene več kanalov hkrati","Vsako obrabo ene komponente","Končni pregled kakovosti","Kategorijo zaustavitve v sili"],k:[0],e:"Primer CCF je prenapetost, temperatura ali skupen kabel, ki hkrati onesposobi oba redundantna kanala."},
+{c:"Funkcionalna varnost",q:"Kateri ukrepi zmanjšujejo nevarnost CCF?",a:["Fizična ločitev kanalov","Raznolikost tehnologij","Ustrezna zaščita pred okoljskimi vplivi","Skupno ožičenje vseh kanalov brez ločitve"],k:[0,1,2],e:"Ločevanje, raznolikost, pravilno načrtovanje in obvladovanje okolja preprečujejo, da bi en vzrok onesposobil vse kanale."},
+{c:"Funkcionalna varnost",q:"Kaj je značilno za kategorijo 3 po ISO 13849-1?",a:["Enojna napaka ne sme povzročiti izgube varnostne funkcije","Je vedno enokanalna brez diagnostike","Vsaka napaka mora biti zaznana takoj","Ne uporablja redundance"],k:[0],e:"Kategorija 3 je praviloma dvokanalna; ena napaka ne sme izgubiti funkcije, vse napake pa niso nujno takoj zaznane."},
+{c:"Funkcionalna varnost",q:"Kaj dodatno zahteva kategorija 4 v primerjavi s kategorijo 3?",a:["Visoko zaznavanje napak in odpornost tudi na kopičenje napak","Odstranitev drugega kanala","Prepoved diagnostike","Samo ročni pregled enkrat letno"],k:[0],e:"Pri kategoriji 4 se napake zaznajo pravočasno, kopičenje napak pa ne sme povzročiti izgube varnostne funkcije."},
+{c:"Funkcionalna varnost",q:"Katero orodje se pogosto uporablja za izračun in verifikacijo PL?",a:["SISTEMA","AutoCAD","Excel kot edino standardizirano orodje","Tesseract"],k:[0],e:"SISTEMA pomaga modelirati varnostne dele krmilnega sistema in preveriti doseženi Performance Level."},
+{c:"Funkcionalna varnost",q:"Kaj je validacija varnostne funkcije?",a:["Dokazovanje z analizo in preskusi, da izvedba izpolnjuje specificirane varnostne zahteve","Samo pregled pravopisa v navodilih","Izdaja akreditacije proizvajalcu","Izračun prodajne cene"],k:[0],e:"Validacija po ISO 13849-2 vključuje analizo in praktično testiranje delovanja varnostne funkcije."},
+{c:"Funkcionalna varnost",q:"Kaj pomeni LVL pri varnostni programski opremi?",a:["Jezik z omejeno spremenljivostjo, npr. konfiguriranje certificiranih funkcijskih blokov","Jezik brez kakršnihkoli omejitev","Nivo vibracij stroja","Vrsto mehanskega varovala"],k:[0],e:"Limited Variability Language omeji možne programske konstrukte in se pogosto uporablja za konfiguriranje preverjenih blokov v varnostnih PLC-jih."}
+];
+
+Q.forEach((x,i)=>{x.id=i+1;x.m=x.k.length>1});
+const $=id=>document.getElementById(id);
+const categories=[...new Set(Q.map(x=>x.c))].sort();
+categories.forEach(c=>{const o=document.createElement("option");o.value=o.textContent=c;$("category").append(o)});
+$("totalStat").textContent=Q.length;
+let state=null, current=null, locked=false;
+const load=()=>{try{return JSON.parse(localStorage.getItem("tppState"))}catch{return null}};
+const profile=()=>{try{return JSON.parse(localStorage.getItem("tppProfile"))||{best:0,wrong:[]}}catch{return{best:0,wrong:[]}}};
+function updateHome(){const p=profile();$("bestStat").textContent=p.best+"%";$("wrongStat").textContent=p.wrong.length;$("resume").disabled=!load();$("retryWrong").disabled=!p.wrong.length;$("resultWrong").disabled=!p.wrong.length}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function newQuiz(mode="normal"){
+  let pool;
+  if(mode==="wrong"){const ids=profile().wrong;pool=Q.filter(q=>ids.includes(q.id))}
+  else{pool=Q.filter(q=>$("category").value==="Vse"||q.c===$("category").value);shuffle(pool);const n=$("length").value;pool=pool.slice(0,n==="all"?pool.length:+n)}
+  if(!pool.length)return;
+  state={ids:pool.map(q=>q.id),pos:0,score:0,answers:[],started:Date.now()};
+  save();showQuiz();
+}
+function save(){localStorage.setItem("tppState",JSON.stringify(state))}
+function showQuiz(){$("setup").classList.add("hidden");$("result").classList.add("hidden");$("quiz").classList.remove("hidden");render()}
+function render(){
+  locked=false;current=Q.find(q=>q.id===state.ids[state.pos]);
+  $("counter").textContent=`Vprašanje ${state.pos+1} od ${state.ids.length}`;
+  $("liveScore").textContent=`Pravilno: ${state.score}`;
+  $("progress").style.width=`${state.pos/state.ids.length*100}%`;
+  $("catBadge").textContent=current.c;
+  $("typeBadge").textContent=current.m?"VEČ pravilnih odgovorov":"1 pravilen odgovor";
+  $("question").textContent=current.q;
+  $("feedback").className="feedback";$("next").classList.add("hidden");
+  $("check").classList.toggle("hidden",!current.m);
+  $("source").textContent=current.o?"Izvirno vprašanje iz dokumenta »komp tpp izpit«, odgovor preverjen po priloženih zapiskih.":"Dodatno vprašanje, pripravljeno iz priloženih zapiskov in izpitnih vprašanj.";
+  const box=$("options");box.innerHTML="";
+  current.a.forEach((text,i)=>{
+    const label=document.createElement("label");label.className="option";
+    const input=document.createElement("input");input.type=current.m?"checkbox":"radio";input.name="answer";input.value=i;
+    const span=document.createElement("span");span.textContent=text;label.append(input,span);box.append(label);
+    if(!current.m)input.addEventListener("change",()=>grade([i]));
+  });
+}
+function same(a,b){return a.length===b.length&&[...a].sort((x,y)=>x-y).every((x,i)=>x===[...b].sort((x,y)=>x-y)[i])}
+function grade(selected){
+  if(locked)return;if(!selected.length){alert("Izberi vsaj en odgovor.");return}locked=true;
+  const ok=same(selected,current.k);if(ok)state.score++;
+  state.answers.push({id:current.id,ok,selected});save();
+  [...$("options").children].forEach((label,i)=>{
+    const chosen=selected.includes(i),right=current.k.includes(i);
+    label.querySelector("input").disabled=true;
+    if(right&&chosen)label.classList.add("correct");
+    else if(chosen&&!right)label.classList.add("wrong");
+    else if(right)label.classList.add("missed");
+  });
+  const f=$("feedback");f.className="feedback show "+(ok?"good":"bad");
+  $("feedbackTitle").textContent=ok?"Pravilno!":"Ni pravilno.";
+  const correctText=current.k.map(i=>current.a[i]).join("; ");
+  $("explanation").innerHTML=(ok?"":`<strong>Pravilni odgovor${current.m?"i":""}:</strong> ${escapeHtml(correctText)}<br>`)+escapeHtml(current.e);
+  $("check").classList.add("hidden");$("next").classList.remove("hidden");
+  $("liveScore").textContent=`Pravilno: ${state.score}`;
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+$("check").onclick=()=>grade([...document.querySelectorAll('#options input:checked')].map(x=>+x.value));
+$("next").onclick=()=>{if(state.pos<state.ids.length-1){state.pos++;save();render();scrollTo({top:0,behavior:"smooth"})}else finish()};
+function finish(){
+  const pct=Math.round(state.score/state.ids.length*100),bad=state.answers.filter(a=>!a.ok).map(a=>a.id);
+  const p=profile();p.best=Math.max(p.best,pct);p.wrong=[...new Set([...p.wrong.filter(id=>!state.answers.some(a=>a.id===id&&a.ok)),...bad])];
+  localStorage.setItem("tppProfile",JSON.stringify(p));localStorage.removeItem("tppState");
+  $("quiz").classList.add("hidden");$("result").classList.remove("hidden");$("resultPct").textContent=pct+"%";
+  $("resultTitle").textContent=pct>=85?"Odlično znanje":pct>=70?"Zelo dobro":pct>=55?"Dobra osnova":"Potrebno bo še nekaj ponavljanja";
+  $("resultText").textContent=`Pravilno si odgovoril na ${state.score} od ${state.ids.length} vprašanj. Napačnih: ${bad.length}.`;
+  state=null;updateHome();scrollTo({top:0,behavior:"smooth"});
+}
+function home(){$("quiz").classList.add("hidden");$("result").classList.add("hidden");$("setup").classList.remove("hidden");updateHome();scrollTo({top:0,behavior:"smooth"})}
+$("start").onclick=()=>newQuiz();$("retryWrong").onclick=()=>newQuiz("wrong");$("resultWrong").onclick=()=>{home();newQuiz("wrong")};
+$("resume").onclick=()=>{state=load();if(state)showQuiz()};$("quit").onclick=home;$("again").onclick=home;
+$("reset").onclick=()=>{if(confirm("Res želiš izbrisati shranjen napredek in rezultate?")){localStorage.removeItem("tppState");localStorage.removeItem("tppProfile");updateHome()}};
+updateHome();
+</script>
+</body>
+</html>
