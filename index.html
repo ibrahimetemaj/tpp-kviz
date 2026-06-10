@@ -18,6 +18,7 @@
     .feedback{display:none;margin-top:16px;padding:15px;border-radius:13px}.feedback.show{display:block}.feedback.good{background:var(--goodbg);border-left:5px solid var(--good)}.feedback.bad{background:var(--badbg);border-left:5px solid var(--bad)}.feedback h3{margin:0 0 5px}.feedback p{margin:0}.nav{display:flex;justify-content:space-between;gap:10px;margin-top:17px}
     .result{text-align:center}.result .big{font-size:54px;font-weight:900;color:var(--navy)}.result h2{margin:4px 0}.result p{color:var(--muted)}.hidden{display:none!important}.note{font-size:13px;color:var(--muted);margin:12px 0 0}.source{font-size:12px;color:var(--muted);margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
     .pdf-panel h2{margin:0 0 6px}.pdf-panel p{margin:0;color:var(--muted)}.order-hint{font-size:13px;color:var(--muted);margin:0 0 12px}.order-number{display:inline-grid;place-items:center;min-width:27px;height:27px;border-radius:50%;background:var(--blue);color:white;font-weight:800;margin-right:9px}.pdf-choice.selected{border-color:var(--blue);background:#edf3ff}.pdf-choice.correct{border-color:var(--good);background:var(--goodbg)}.pdf-choice.wrong{border-color:var(--bad);background:var(--badbg)}
+    .question-visual{display:block;max-width:100%;max-height:320px;width:auto;height:auto;margin:0 auto 18px;border:1px solid var(--line);border-radius:12px;background:#f3f5f8;padding:5px}
     @media(max-width:520px){.controls{grid-template-columns:1fr}.shell{padding-top:8px}.hero{border-radius:15px;padding:20px}.panel,.card{border-radius:15px}.actions button{flex:1}.nav button{flex:1}.stats{gap:5px}.stat{padding:8px 4px}}
   </style>
 </head>
@@ -98,6 +99,7 @@
       <span class="badge">PDF VPRAŠANJE</span>
       <span id="pdfType" class="badge type"></span>
       <h2 id="pdfQuestion" class="question"></h2>
+      <img id="pdfVisual" class="question-visual hidden" alt="Slika ali skica k vprašanju">
       <p id="pdfOrderHint" class="order-hint hidden">Klikaj odgovore v pravilnem vrstnem redu.</p>
       <div id="pdfOptions" class="options"></div>
       <div id="pdfFeedback" class="feedback">
@@ -208,20 +210,20 @@ const Q = [
 const PDFQ = [
 {q:"Razvrsti faze pri dajanju stroja na trg",a:["izdelamo tehnično dokumentacijo","napišemo ES izjavo o skladnosti","stroj izdelamo in preizkusimo","pritrdimo CE oznako na stroj"],k:[0,2,1,3],order:true},
 {q:"Sistem deluje, če deluje vsaj eden od dveh podsistemov z zanesljivostjo R1=2=0,9. Celotni sistem ima zanesljivost",a:["R=0,81","R=0,01","R=0,8","R=0,99"],k:[3]},
-{q:"Na sliki je skiciran primer doseganja preko varovalne konstrukcije. Velja:",a:["višja kot je varovalna konstrukcija 3, večja mora biti razdalja c","pri nizki stopnji nevarnosti lahko uporabimo varovalno konstrukcijo katerekoli višine","višja kot je varovalna konstrukcija 3, manjša je lahko razdalja c","varovalne konstrukcije nižje od 1400 mm pri visoki stopnji nevarnosti morajo biti opremljene z dodatnim zaščitnim ukrepom"],k:[2,3]},
+{q:"Na sliki je skiciran primer doseganja preko varovalne konstrukcije. Velja:",a:["višja kot je varovalna konstrukcija 3, večja mora biti razdalja c","pri nizki stopnji nevarnosti lahko uporabimo varovalno konstrukcijo katerekoli višine","višja kot je varovalna konstrukcija 3, manjša je lahko razdalja c","varovalne konstrukcije nižje od 1400 mm pri visoki stopnji nevarnosti morajo biti opremljene z dodatnim zaščitnim ukrepom"],k:[2,3],img:"vizualne-priloge/vprasanje-03.jpg"},
 {q:"Po vrsti razporedi načela varnega načrtovanja in izdelave stroja",a:["vgrajena varnost","ograjevanje","navodila za uporabo"],k:[0,1,2],order:true},
 {q:"Standardi imajo naslednje lastnosti",a:["So dokumenti za splošno rabo","So dokumenti samo za industrijsko rabo","Določajo skupne značilnosti izdelkov","Opisujejo variacije izdelkov"],k:[0,2]},
 {q:"Standard tipa C",a:["je standard za posamezno vrsto strojev","zadoščajo za ugotovitev skladnosti z bistvenimi zahtevami","govori o posameznih varnostnih vidikih","predstavljajo osnovne varnostne koncepte"],k:[0,1]},
 {q:"Za T10d faktor je značilno",a:["ni povezan s faktorjem B10","Uporablja se za komponente z obrabo","predstavlja število obratovalnih ciklov posamezne komponente","predstavlja čas v katerem nevarno odpove 10% elementov"],k:[1,3]},
 {q:"Slovenska Akreditacija je nacionalni organ, ki izvaja:",a:["Sodeluje v mednarodnih organizacijah","Kalibracijo meril skladno z mednarodnimi etaloni","Certificiranje proizvodov in sistemov zagotavljanja kakovosti","Akreditiranje laboratorijev"],k:[0,3]},
-{q:"Na sliki vidimo",a:["Nekodirana mehanska stikala","Kodirana mehanska stikala","Stikala tipa 2 (standard SIST EN ISO 14119)","Stikala tipa 1 (standard SIST EN ISO 14119)"],k:[1,2]},
+{q:"Na sliki vidimo",a:["Nekodirana mehanska stikala","Kodirana mehanska stikala","Stikala tipa 2 (standard SIST EN ISO 14119)","Stikala tipa 1 (standard SIST EN ISO 14119)"],k:[1,2],img:"vizualne-priloge/vprasanje-09.jpg"},
 {q:"Katere lastnosti ima varen proizvod v smislu zakona o splošni varnosti proizvodov",a:["Ob ustrezni uporabi lahko predstavlja minimalno nevarnost","Po obliki, vonju, barvi in pakiranju ne sme spominjati na živilo, če to ni","Ob ustrezni uporabi ne sme predstavljati nobene nevarnosti"],k:[0]},
 {q:"Naprava za izklop v sili",a:["rdeče barve z rumeno obrobo brez napisa IZKLOP V SILI na obrobi","lahko so tipke izklopa v sili, potezne vrvice, nožna stikala","lahko so tipke izklopa v sili, dvoročni vklopi, nožna stikala","rdeče barve z rumeno obrobo z napisom IZKLOP V SILI na obrobi"],k:[0,1]},
 {q:"Razvrsti v pravilnem časovnem zaporedju",a:["Kontrola kakovosti - QC","Zagotavljanje kakovosti - QA","Stalno izboljševanje kakovosti - CQI"],k:[0,1,2],order:true},
 {q:"Najpomembnejši vir za zagotavljanje kakovosti je",a:["Organizacijsko znanje","Nadzorovanje in merjenje","Okolje za delovanje procesov","Infrastruktura","Zaposleni"],k:[4]},
 {q:"LVL in FVL programska jezika",a:["LVL je praviloma namenjen za kodiranje varnostne programske opreme","LVL predstavlja programski jezik z omejeno variabilnostjo","Varnostna programska oprema je praviloma napisana ob pomoč FVL programskega jezika","FVL je praviloma namenjen za kodiranje varnostne programske opreme"],k:[0,1]},
 {q:"Nepomična varovala",a:["lahko so pritrjena s pritrdilnimi elementi","brez pritrdilnih elementov ne smejo ostati zaprta","morajo biti na svoja mesta pritrjena stalno","brez pritrdilnih elementov ne smejo ostati odprta"],k:[0,1]},
-{q:"Oznaka na sliki",a:["kdor jo pritrdi prevzame odgovornost","oblika na sliki je priporočena","mora biti pritrjena na vsak stroj znotraj EU","oblika na sliki je zahtevana"],k:[0,3]},
+{q:"Oznaka na sliki",a:["kdor jo pritrdi prevzame odgovornost","oblika na sliki je priporočena","mora biti pritrjena na vsak stroj znotraj EU","oblika na sliki je zahtevana"],k:[0,3],img:"vizualne-priloge/vprasanje-16.jpg"},
 {q:"Neposredni prevzem pravil mednarodnega prava v SLO zakonodajo",a:["je potreben, če si zakonodaji Slovenije in EU nasprotujeta","je obvezen od včlanitve Slovenije v EU dalje","je možen, na področjih, kjer se je Slovenija odrekla suverenosti","je možen, če Slovenija sprejme zakon, ki vsebuje določila sprejete mednarodne pogodbe"],k:[2,3]},
 {q:"Proizvajalec stroja poskrbi za",a:["Informacije za uporabo","uporabo osebne varovalne opreme","Predpise organizacijske ukrepe pri uporabi stroja","Ograjevanje stroja"],k:[0,3]},
 {q:"Razmišljanje na podlagi tveganja",a:["razmišljamo ko se tveganje realizira","vsebuje koncept preventivnega in proaktivnega delovanja","lahko vodi k osvajanju novih tehnologij","tveganje morajo biti poslovna skrivnost podjetja"],k:[1,2]},
@@ -245,7 +247,7 @@ const PDFQ = [
 {q:"Minimalna razdalja glede na standard ISO 13855 je",a:["Razdalja, ki jo izpostavljen del telesa lahko naredi v varovalno cono, prede se pojavi signal alarma","Izračunana razdalja med zaščitno napravo in nevarno cono, ki je potrebna, da izpostavljen del človeškega telesa ne pride v stik z nevarnostjo, preden se nevarna gibanja ustavijo","Razdalja, ki jo je potrebna, da izpostavljen del telesa pride v stik z nevarnostjo","Razdalja, ki jo izpostavljen del telesa lahko naredi v varovalno cono, prede se gibanja ustavijo"],k:[1]},
 {q:"Osvetlitev stroja",a:["preprečevanje stroboskopskih efektov je potrebno predvsem zaradi vibracij ohišij strojev","preprečiti moramo zasenčenja mesta in bleščanje","za osvetlitev poskrbimo ko stroj postavimo v objekt v obsegu, da je skupna osvetlitev ustrezna","notranje dele osvetlimo samo, če jih pogosto pregledujemo"],k:[1,3]},
 {q:"Projektant",a:["je pravna ali fizična oseba","skrbi za skladnost z gradbenimi predpisi","spremlja gradnjo objekta","pridobi mnenja in soglasja"],k:[0,1]},
-{q:"Dvoročne naprave",a:["onemogočajo poseg v nevarno območje z rokami","če imata aktivacijski tipki pokrov, smemo namestiti napravo do 100 mm bližje nevarni coni","če imata aktivacijski tipki pokrov, smemo namestiti napravo tik ob nevarni coni","pokrov nad aktivacijskimi tipkami nima vpliva na postavitev dvoročne naprave"],k:[0,2]}
+{q:"Dvoročne naprave",a:["onemogočajo poseg v nevarno območje z rokami","če imata aktivacijski tipki pokrov, smemo namestiti napravo do 100 mm bližje nevarni coni","če imata aktivacijski tipki pokrov, smemo namestiti napravo tik ob nevarni coni","pokrov nad aktivacijskimi tipkami nima vpliva na postavitev dvoročne naprave"],k:[0,2],img:"vizualne-priloge/vprasanje-40.jpg"}
 ];
 
 Q.forEach((x,i)=>{x.id=i+1;x.m=x.k.length>1});
@@ -334,6 +336,8 @@ function showPdfQuestion(){
   $("pdfCounter").textContent=`PDF vprašanje ${pdfPos+1} od ${PDF_COUNT}`;
   $("pdfProgress").style.width=`${(pdfPos+1)/PDF_COUNT*100}%`;
   $("pdfQuestion").textContent=pdfCurrent.q;
+  $("pdfVisual").classList.toggle("hidden",!pdfCurrent.img);
+  if(pdfCurrent.img)$("pdfVisual").src=pdfCurrent.img;
   $("pdfType").textContent=pdfCurrent.order?"RAZVRŠČANJE":pdfCurrent.k.length>1?"VEČ pravilnih odgovorov":"1 pravilen odgovor";
   $("pdfOrderHint").classList.toggle("hidden",!pdfCurrent.order);
   $("pdfFeedback").className="feedback";
