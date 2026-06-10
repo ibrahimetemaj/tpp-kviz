@@ -114,6 +114,16 @@
       </div>
     </article>
   </section>
+
+  <section id="pdfResult" class="card result hidden">
+    <div id="pdfResultPct" class="big">0%</div>
+    <h2>Rezultat PDF kviza</h2>
+    <p id="pdfResultText"></p>
+    <div class="actions" style="justify-content:center">
+      <button class="primary" id="pdfAgain">Ponovno reši PDF kviz</button>
+      <button class="secondary" id="pdfResultHome">Nazaj na začetek</button>
+    </div>
+  </section>
 </main>
 
 <script>
@@ -329,7 +339,7 @@ $("resume").onclick=()=>{state=load();if(state)showQuiz()};$("quit").onclick=hom
 $("reset").onclick=()=>{if(confirm("Res želiš izbrisati shranjen napredek in rezultate?")){localStorage.removeItem("tppState");localStorage.removeItem("tppProfile");updateHome()}};
 
 const PDF_COUNT=PDFQ.length;
-let pdfOrder=[],pdfPos=0,pdfCurrent=null,pdfLocked=false,pdfSequence=[];
+let pdfOrder=[],pdfPos=0,pdfCurrent=null,pdfLocked=false,pdfSequence=[],pdfScore=0;
 function showPdfQuestion(){
   pdfLocked=false;pdfSequence=[];
   pdfCurrent=PDFQ[pdfOrder[pdfPos]];
@@ -377,6 +387,7 @@ function gradePdf(selected){
   pdfLocked=true;
   const correct=pdfCurrent.k;
   const ok=same(selected,correct);
+  if(ok)pdfScore++;
   [...$("pdfOptions").children].forEach(label=>{
     const idx=+label.querySelector("input").value;
     label.querySelector("input").disabled=true;
@@ -400,15 +411,16 @@ function gradePdf(selected){
 }
 $("startPdf").onclick=()=>{
   pdfOrder=shuffle(Array.from({length:PDF_COUNT},(_,i)=>i));
-  pdfPos=0;
+  pdfPos=0;pdfScore=0;
   $("setup").classList.add("hidden");
   $("pdfSetup").classList.add("hidden");
   $("quiz").classList.add("hidden");
   $("result").classList.add("hidden");
+  $("pdfResult").classList.add("hidden");
   $("pdfQuiz").classList.remove("hidden");
   showPdfQuestion();
 };
-$("pdfNext").onclick=()=>{if(pdfPos<PDF_COUNT-1){pdfPos++;showPdfQuestion()}else pdfHome()};
+$("pdfNext").onclick=()=>{if(pdfPos<PDF_COUNT-1){pdfPos++;showPdfQuestion()}else showPdfResult()};
 $("pdfCheck").onclick=()=>{
   const selected=pdfCurrent.order?pdfSequence:[...document.querySelectorAll('#pdfOptions input:checked')].map(x=>+x.value);
   gradePdf(selected);
@@ -423,11 +435,23 @@ $("pdfClear").onclick=()=>{
 };
 function pdfHome(){
   $("pdfQuiz").classList.add("hidden");
+  $("pdfResult").classList.add("hidden");
   $("setup").classList.remove("hidden");
   $("pdfSetup").classList.remove("hidden");
   scrollTo({top:0,behavior:"smooth"});
 }
+function showPdfResult(){
+  const wrong=PDF_COUNT-pdfScore;
+  const pct=Math.round(pdfScore/PDF_COUNT*100);
+  $("pdfQuiz").classList.add("hidden");
+  $("pdfResultPct").textContent=`${pct}%`;
+  $("pdfResultText").textContent=`Pravilnih odgovorov: ${pdfScore}. Napačnih odgovorov: ${wrong}. Skupaj: ${PDF_COUNT}.`;
+  $("pdfResult").classList.remove("hidden");
+  scrollTo({top:0,behavior:"smooth"});
+}
 $("pdfBack").onclick=pdfHome;
+$("pdfAgain").onclick=()=>$("startPdf").click();
+$("pdfResultHome").onclick=pdfHome;
 updateHome();
 </script>
 </body>
