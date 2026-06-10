@@ -17,6 +17,7 @@
     .options{display:grid;gap:10px}.option{display:flex;gap:12px;align-items:flex-start;border:2px solid var(--line);padding:13px;border-radius:13px;cursor:pointer;transition:.15s;background:white}.option:hover{border-color:#aebed9}.option input{margin-top:4px;min-width:18px;min-height:18px;accent-color:var(--blue)}.option.correct{border-color:var(--good);background:var(--goodbg)}.option.wrong{border-color:var(--bad);background:var(--badbg)}.option.missed{border-color:var(--good);border-style:dashed}
     .feedback{display:none;margin-top:16px;padding:15px;border-radius:13px}.feedback.show{display:block}.feedback.good{background:var(--goodbg);border-left:5px solid var(--good)}.feedback.bad{background:var(--badbg);border-left:5px solid var(--bad)}.feedback h3{margin:0 0 5px}.feedback p{margin:0}.nav{display:flex;justify-content:space-between;gap:10px;margin-top:17px}
     .result{text-align:center}.result .big{font-size:54px;font-weight:900;color:var(--navy)}.result h2{margin:4px 0}.result p{color:var(--muted)}.hidden{display:none!important}.note{font-size:13px;color:var(--muted);margin:12px 0 0}.source{font-size:12px;color:var(--muted);margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
+    .pdf-panel h2{margin:0 0 6px}.pdf-panel p{margin:0;color:var(--muted)}.order-hint{font-size:13px;color:var(--muted);margin:0 0 12px}.order-number{display:inline-grid;place-items:center;min-width:27px;height:27px;border-radius:50%;background:var(--blue);color:white;font-weight:800;margin-right:9px}.pdf-choice.selected{border-color:var(--blue);background:#edf3ff}.pdf-choice.correct{border-color:var(--good);background:var(--goodbg)}.pdf-choice.wrong{border-color:var(--bad);background:var(--badbg)}
     @media(max-width:520px){.controls{grid-template-columns:1fr}.shell{padding-top:8px}.hero{border-radius:15px;padding:20px}.panel,.card{border-radius:15px}.actions button{flex:1}.nav button{flex:1}.stats{gap:5px}.stat{padding:8px 4px}}
   </style>
 </head>
@@ -54,6 +55,15 @@
     <p class="note">Pri vprašanju je vedno jasno napisano, ali je pravilen en odgovor ali več odgovorov.</p>
   </section>
 
+  <section id="pdfSetup" class="panel pdf-panel">
+    <span class="badge">NOVO</span>
+    <h2>PDF slikovni kviz</h2>
+    <p>Vseh 40 izpitnih vprašanj iz PDF-ja z odgovori in takojšnjim preverjanjem.</p>
+    <div class="actions">
+      <button class="primary" id="startPdf">Začni PDF kviz</button>
+    </div>
+  </section>
+
   <section id="quiz" class="hidden">
     <div class="progress-wrap"><div id="progress" class="progress"></div></div>
     <div class="meta"><span id="counter"></span><span id="liveScore"></span></div>
@@ -79,6 +89,28 @@
       <button class="primary" id="again">Nov kviz</button>
       <button class="secondary" id="resultWrong">Ponovi napačne</button>
     </div>
+  </section>
+
+  <section id="pdfQuiz" class="hidden">
+    <div class="progress-wrap"><div id="pdfProgress" class="progress"></div></div>
+    <div class="meta"><span id="pdfCounter"></span><span>Originalna slika iz PDF-ja</span></div>
+    <article class="card">
+      <span class="badge">PDF VPRAŠANJE</span>
+      <span id="pdfType" class="badge type"></span>
+      <h2 id="pdfQuestion" class="question"></h2>
+      <p id="pdfOrderHint" class="order-hint hidden">Klikaj odgovore v pravilnem vrstnem redu.</p>
+      <div id="pdfOptions" class="options"></div>
+      <div id="pdfFeedback" class="feedback">
+        <h3 id="pdfFeedbackTitle"></h3>
+        <p id="pdfExplanation"></p>
+      </div>
+      <div class="nav">
+        <button class="secondary" id="pdfBack">Nazaj na začetek</button>
+        <button class="secondary hidden" id="pdfClear">Počisti vrstni red</button>
+        <button class="primary hidden" id="pdfCheck">Preveri odgovor</button>
+        <button class="primary" id="pdfNext">Naslednje</button>
+      </div>
+    </article>
   </section>
 </main>
 
@@ -173,6 +205,49 @@ const Q = [
 {c:"Funkcionalna varnost",q:"Kaj pomeni LVL pri varnostni programski opremi?",a:["Jezik z omejeno spremenljivostjo, npr. konfiguriranje certificiranih funkcijskih blokov","Jezik brez kakršnihkoli omejitev","Nivo vibracij stroja","Vrsto mehanskega varovala"],k:[0],e:"Limited Variability Language omeji možne programske konstrukte in se pogosto uporablja za konfiguriranje preverjenih blokov v varnostnih PLC-jih."}
 ];
 
+const PDFQ = [
+{q:"Razvrsti faze pri dajanju stroja na trg",a:["izdelamo tehnično dokumentacijo","napišemo ES izjavo o skladnosti","stroj izdelamo in preizkusimo","pritrdimo CE oznako na stroj"],k:[0,2,1,3],order:true},
+{q:"Sistem deluje, če deluje vsaj eden od dveh podsistemov z zanesljivostjo R1=2=0,9. Celotni sistem ima zanesljivost",a:["R=0,81","R=0,01","R=0,8","R=0,99"],k:[3]},
+{q:"Na sliki je skiciran primer doseganja preko varovalne konstrukcije. Velja:",a:["višja kot je varovalna konstrukcija 3, večja mora biti razdalja c","pri nizki stopnji nevarnosti lahko uporabimo varovalno konstrukcijo katerekoli višine","višja kot je varovalna konstrukcija 3, manjša je lahko razdalja c","varovalne konstrukcije nižje od 1400 mm pri visoki stopnji nevarnosti morajo biti opremljene z dodatnim zaščitnim ukrepom"],k:[2,3]},
+{q:"Po vrsti razporedi načela varnega načrtovanja in izdelave stroja",a:["vgrajena varnost","ograjevanje","navodila za uporabo"],k:[0,1,2],order:true},
+{q:"Standardi imajo naslednje lastnosti",a:["So dokumenti za splošno rabo","So dokumenti samo za industrijsko rabo","Določajo skupne značilnosti izdelkov","Opisujejo variacije izdelkov"],k:[0,2]},
+{q:"Standard tipa C",a:["je standard za posamezno vrsto strojev","zadoščajo za ugotovitev skladnosti z bistvenimi zahtevami","govori o posameznih varnostnih vidikih","predstavljajo osnovne varnostne koncepte"],k:[0,1]},
+{q:"Za T10d faktor je značilno",a:["ni povezan s faktorjem B10","Uporablja se za komponente z obrabo","predstavlja število obratovalnih ciklov posamezne komponente","predstavlja čas v katerem nevarno odpove 10% elementov"],k:[1,3]},
+{q:"Slovenska Akreditacija je nacionalni organ, ki izvaja:",a:["Sodeluje v mednarodnih organizacijah","Kalibracijo meril skladno z mednarodnimi etaloni","Certificiranje proizvodov in sistemov zagotavljanja kakovosti","Akreditiranje laboratorijev"],k:[0,3]},
+{q:"Na sliki vidimo",a:["Nekodirana mehanska stikala","Kodirana mehanska stikala","Stikala tipa 2 (standard SIST EN ISO 14119)","Stikala tipa 1 (standard SIST EN ISO 14119)"],k:[1,2]},
+{q:"Katere lastnosti ima varen proizvod v smislu zakona o splošni varnosti proizvodov",a:["Ob ustrezni uporabi lahko predstavlja minimalno nevarnost","Po obliki, vonju, barvi in pakiranju ne sme spominjati na živilo, če to ni","Ob ustrezni uporabi ne sme predstavljati nobene nevarnosti"],k:[0]},
+{q:"Naprava za izklop v sili",a:["rdeče barve z rumeno obrobo brez napisa IZKLOP V SILI na obrobi","lahko so tipke izklopa v sili, potezne vrvice, nožna stikala","lahko so tipke izklopa v sili, dvoročni vklopi, nožna stikala","rdeče barve z rumeno obrobo z napisom IZKLOP V SILI na obrobi"],k:[0,1]},
+{q:"Razvrsti v pravilnem časovnem zaporedju",a:["Kontrola kakovosti - QC","Zagotavljanje kakovosti - QA","Stalno izboljševanje kakovosti - CQI"],k:[0,1,2],order:true},
+{q:"Najpomembnejši vir za zagotavljanje kakovosti je",a:["Organizacijsko znanje","Nadzorovanje in merjenje","Okolje za delovanje procesov","Infrastruktura","Zaposleni"],k:[4]},
+{q:"LVL in FVL programska jezika",a:["LVL je praviloma namenjen za kodiranje varnostne programske opreme","LVL predstavlja programski jezik z omejeno variabilnostjo","Varnostna programska oprema je praviloma napisana ob pomoč FVL programskega jezika","FVL je praviloma namenjen za kodiranje varnostne programske opreme"],k:[0,1]},
+{q:"Nepomična varovala",a:["lahko so pritrjena s pritrdilnimi elementi","brez pritrdilnih elementov ne smejo ostati zaprta","morajo biti na svoja mesta pritrjena stalno","brez pritrdilnih elementov ne smejo ostati odprta"],k:[0,1]},
+{q:"Oznaka na sliki",a:["kdor jo pritrdi prevzame odgovornost","oblika na sliki je priporočena","mora biti pritrjena na vsak stroj znotraj EU","oblika na sliki je zahtevana"],k:[0,3]},
+{q:"Neposredni prevzem pravil mednarodnega prava v SLO zakonodajo",a:["je potreben, če si zakonodaji Slovenije in EU nasprotujeta","je obvezen od včlanitve Slovenije v EU dalje","je možen, na področjih, kjer se je Slovenija odrekla suverenosti","je možen, če Slovenija sprejme zakon, ki vsebuje določila sprejete mednarodne pogodbe"],k:[2,3]},
+{q:"Proizvajalec stroja poskrbi za",a:["Informacije za uporabo","uporabo osebne varovalne opreme","Predpise organizacijske ukrepe pri uporabi stroja","Ograjevanje stroja"],k:[0,3]},
+{q:"Razmišljanje na podlagi tveganja",a:["razmišljamo ko se tveganje realizira","vsebuje koncept preventivnega in proaktivnega delovanja","lahko vodi k osvajanju novih tehnologij","tveganje morajo biti poslovna skrivnost podjetja"],k:[1,2]},
+{q:"Gradbeno dovoljenje",a:["se zahteva z odločbo gradbenega inšpektorja","se zahteva za rekonstrukcijo objektov","se zahteva za vzdrževanje objektov","se zahteva pri spremembi namembnosti objektov"],k:[1,3]},
+{q:"Izklop kategorije 0",a:["energijo aktuatorjem stroja odklopi, ko so nevarna gibanja zaustavljena","zaustavi nevarna gibanja, energije stroju pa ne odklopi","takoj odklopi energijo aktuatorjem stroja"],k:[2]},
+{q:"Kontrola kvalitete QC",a:["Se ukvarja z vzroki nastanka neskladnih produktov","Predvideva proaktivno in preventivno delovanje","Se ne ukvarja z vzroki nastanka neskladnih produktov","Je najstarejši način zagotavljanja kvalitete"],k:[2,3]},
+{q:"Razdalja na katero se postavi varovalna oprema, ki fizično ne preprečuje dostopa se določi po enačbi s=k*t+c, pri čemer velja",a:["c predstavlja dolžino koraka","c predstavlja vpadno razdaljo","k ima lastnost hitrosti približevanja","k ima lastnost vpadne razdalje"],k:[1,2]},
+{q:"Varnostna funkcija stroja je",a:["funkcija stroja, ki zagotavlja varnost v vseh fazah delovanja stroja","funkcija stroja, ki zagotavlja varnost v delovnih fazah stroja","funkcija stroja, katere odpoved lahko povzroči takojšnjo nevarnost","funkcija stroja, katere odpoved lahko povzroči takojšnje povečanje tveganja"],k:[3]},
+{q:"Vgrajena varnost pomeni",a:["zagotoviti varnost v fazi načrtovanja","stroj vgraditi skladno z varnostnimi predpisi","v stroj vgraditi varnostne komponente","vgraditi sisteme za varen odklop energij"],k:[0]},
+{q:"Delno dokončan stroj je definiran po direktivi o varnosti strojev je",a:["sklop togo povezanih delov","sklop povezanih delov, vsaj eden gibljiv","lahko deluje samostojno","namenjen za vgradnjo v drug stroj"],k:[1,3]},
+{q:"Za SIL nivo je značilno",a:["Nivo 4 je primeren za katastrofične dogodke","Nivoji se stopnjujejo od a do e","Nivoji se stopnjujejo od 1 do 4","Nivo 1 preprečuje trajne poškodbe"],k:[0,2]},
+{q:"Pod omejitvami stroja razumemo",a:["barvne omejitve","časovne omejitve","cenovne omejitve","prostorske omejitve"],k:[1,3]},
+{q:"Ukrepi za umik/reševanje ujetih oseb",a:["izstop iz stroja tudi zaustavi stroj","z notranje strani je potrebno omogočiti izstop","izstop iz stroja le tega ne sme zaustaviti","v primeru ujete osebe pokličemo 112"],k:[0,1]},
+{q:"Pogodba o Evropski Uniji ali Maastrichtska pogodba je:",a:["Del sekundarnega prava EU","Del terciarnega prava EU","Del primarnega prava EU"],k:[2]},
+{q:"CENELEC se ukvarja z:",a:["Evropsko elektrotehniško standardizacijo","Informatizacijo evropskih mest","Centralno evropsko elektrotehniko in komunikacijami","Mednarodno elektrotehniško standardizacijo"],k:[0]},
+{q:"Evropska standardizacija",a:["ETSI deluje na evropskem področju telekomunikacij","CENELEC predstavlja mednarodno elektrotehniško komisijo","CEN predstavlja organizacijo za evropsko standardizacijo","ISO predstavlja organizacijo za evropsko standardizacijo"],k:[0,2]},
+{q:"Tveganja, ki jih z načrtovanjem ni moč odpraviti, odpravimo z",a:["vgradnjo varnostnih komponent","sistemi za varen odklop energij","z dopolnilnimi varnostnimi ukrepi","z ograjevanjem"],k:[2,3]},
+{q:"Časovno od najzgodnejše do najpoznejše razvrsti projektno dokumentacijo",a:["idejno zasnovo za pridobitev projektnih in drugih pogojev (IZP)","projektno dokumentacijo za izvedbo gradnje (PZI)","projektno dokumentacijo izvedenih del (PID)","dokazilo o zanesljivosti objekta (DZO)"],k:[0,1,2,3],order:true},
+{q:"Tehnična zakonodaja je namenjena",a:["Zaščiti zdravja potrošnika","Zaščiti intelektualne lastnine","Zaščiti okolja","Zaščiti prostega pretoka kapitala"],k:[0,2]},
+{q:"Harmoniziran EU standard",a:["Podpira zahteve EU direktiv","Je obvezen za uporabo v EU","Pogoj za namestitev CE oznake","Ustvarja domnevo o skladnosti"],k:[0,3]},
+{q:"Minimalna razdalja glede na standard ISO 13855 je",a:["Razdalja, ki jo izpostavljen del telesa lahko naredi v varovalno cono, prede se pojavi signal alarma","Izračunana razdalja med zaščitno napravo in nevarno cono, ki je potrebna, da izpostavljen del človeškega telesa ne pride v stik z nevarnostjo, preden se nevarna gibanja ustavijo","Razdalja, ki jo je potrebna, da izpostavljen del telesa pride v stik z nevarnostjo","Razdalja, ki jo izpostavljen del telesa lahko naredi v varovalno cono, prede se gibanja ustavijo"],k:[1]},
+{q:"Osvetlitev stroja",a:["preprečevanje stroboskopskih efektov je potrebno predvsem zaradi vibracij ohišij strojev","preprečiti moramo zasenčenja mesta in bleščanje","za osvetlitev poskrbimo ko stroj postavimo v objekt v obsegu, da je skupna osvetlitev ustrezna","notranje dele osvetlimo samo, če jih pogosto pregledujemo"],k:[1,3]},
+{q:"Projektant",a:["je pravna ali fizična oseba","skrbi za skladnost z gradbenimi predpisi","spremlja gradnjo objekta","pridobi mnenja in soglasja"],k:[0,1]},
+{q:"Dvoročne naprave",a:["onemogočajo poseg v nevarno območje z rokami","če imata aktivacijski tipki pokrov, smemo namestiti napravo do 100 mm bližje nevarni coni","če imata aktivacijski tipki pokrov, smemo namestiti napravo tik ob nevarni coni","pokrov nad aktivacijskimi tipkami nima vpliva na postavitev dvoročne naprave"],k:[0,2]}
+];
+
 Q.forEach((x,i)=>{x.id=i+1;x.m=x.k.length>1});
 const $=id=>document.getElementById(id);
 const categories=[...new Set(Q.map(x=>x.c))].sort();
@@ -195,6 +270,9 @@ function save(){localStorage.setItem("tppState",JSON.stringify(state))}
 function showQuiz(){$("setup").classList.add("hidden");$("result").classList.add("hidden");$("quiz").classList.remove("hidden");render()}
 function render(){
   locked=false;current=Q.find(q=>q.id===state.ids[state.pos]);
+  const order=shuffle(current.a.map((_,i)=>i));
+  const displayAnswers=order.map(i=>current.a[i]);
+  const displayCorrect=current.k.map(i=>order.indexOf(i));
   $("counter").textContent=`Vprašanje ${state.pos+1} od ${state.ids.length}`;
   $("liveScore").textContent=`Pravilno: ${state.score}`;
   $("progress").style.width=`${state.pos/state.ids.length*100}%`;
@@ -205,20 +283,21 @@ function render(){
   $("check").classList.toggle("hidden",!current.m);
   $("source").textContent=current.o?"Izvirno vprašanje iz dokumenta »komp tpp izpit«, odgovor preverjen po priloženih zapiskih.":"Dodatno vprašanje, pripravljeno iz priloženih zapiskov in izpitnih vprašanj.";
   const box=$("options");box.innerHTML="";
-  current.a.forEach((text,i)=>{
+  displayAnswers.forEach((text,i)=>{
     const label=document.createElement("label");label.className="option";
     const input=document.createElement("input");input.type=current.m?"checkbox":"radio";input.name="answer";input.value=i;
     const span=document.createElement("span");span.textContent=text;label.append(input,span);box.append(label);
-    if(!current.m)input.addEventListener("change",()=>grade([i]));
+    if(!current.m)input.addEventListener("change",()=>grade([i],displayAnswers,displayCorrect));
   });
+  $("check").onclick=()=>grade([...document.querySelectorAll('#options input:checked')].map(x=>+x.value),displayAnswers,displayCorrect);
 }
 function same(a,b){return a.length===b.length&&[...a].sort((x,y)=>x-y).every((x,i)=>x===[...b].sort((x,y)=>x-y)[i])}
-function grade(selected){
+function grade(selected,answers=current.a,correct=current.k){
   if(locked)return;if(!selected.length){alert("Izberi vsaj en odgovor.");return}locked=true;
-  const ok=same(selected,current.k);if(ok)state.score++;
+  const ok=same(selected,correct);if(ok)state.score++;
   state.answers.push({id:current.id,ok,selected});save();
   [...$("options").children].forEach((label,i)=>{
-    const chosen=selected.includes(i),right=current.k.includes(i);
+    const chosen=selected.includes(i),right=correct.includes(i);
     label.querySelector("input").disabled=true;
     if(right&&chosen)label.classList.add("correct");
     else if(chosen&&!right)label.classList.add("wrong");
@@ -226,13 +305,12 @@ function grade(selected){
   });
   const f=$("feedback");f.className="feedback show "+(ok?"good":"bad");
   $("feedbackTitle").textContent=ok?"Pravilno!":"Ni pravilno.";
-  const correctText=current.k.map(i=>current.a[i]).join("; ");
+  const correctText=correct.map(i=>answers[i]).join("; ");
   $("explanation").innerHTML=(ok?"":`<strong>Pravilni odgovor${current.m?"i":""}:</strong> ${escapeHtml(correctText)}<br>`)+escapeHtml(current.e);
   $("check").classList.add("hidden");$("next").classList.remove("hidden");
   $("liveScore").textContent=`Pravilno: ${state.score}`;
 }
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
-$("check").onclick=()=>grade([...document.querySelectorAll('#options input:checked')].map(x=>+x.value));
 $("next").onclick=()=>{if(state.pos<state.ids.length-1){state.pos++;save();render();scrollTo({top:0,behavior:"smooth"})}else finish()};
 function finish(){
   const pct=Math.round(state.score/state.ids.length*100),bad=state.answers.filter(a=>!a.ok).map(a=>a.id);
@@ -247,9 +325,106 @@ function home(){$("quiz").classList.add("hidden");$("result").classList.add("hid
 $("start").onclick=()=>newQuiz();$("retryWrong").onclick=()=>newQuiz("wrong");$("resultWrong").onclick=()=>{home();newQuiz("wrong")};
 $("resume").onclick=()=>{state=load();if(state)showQuiz()};$("quit").onclick=home;$("again").onclick=home;
 $("reset").onclick=()=>{if(confirm("Res želiš izbrisati shranjen napredek in rezultate?")){localStorage.removeItem("tppState");localStorage.removeItem("tppProfile");updateHome()}};
+
+const PDF_COUNT=PDFQ.length;
+let pdfOrder=[],pdfPos=0,pdfCurrent=null,pdfLocked=false,pdfSequence=[];
+function showPdfQuestion(){
+  pdfLocked=false;pdfSequence=[];
+  pdfCurrent=PDFQ[pdfOrder[pdfPos]];
+  $("pdfCounter").textContent=`PDF vprašanje ${pdfPos+1} od ${PDF_COUNT}`;
+  $("pdfProgress").style.width=`${(pdfPos+1)/PDF_COUNT*100}%`;
+  $("pdfQuestion").textContent=pdfCurrent.q;
+  $("pdfType").textContent=pdfCurrent.order?"RAZVRŠČANJE":pdfCurrent.k.length>1?"VEČ pravilnih odgovorov":"1 pravilen odgovor";
+  $("pdfOrderHint").classList.toggle("hidden",!pdfCurrent.order);
+  $("pdfFeedback").className="feedback";
+  $("pdfCheck").classList.toggle("hidden",pdfCurrent.k.length===1&&!pdfCurrent.order);
+  $("pdfClear").classList.toggle("hidden",!pdfCurrent.order);
+  $("pdfNext").classList.add("hidden");
+  const box=$("pdfOptions");box.innerHTML="";
+  const displayOrder=shuffle(pdfCurrent.a.map((_,i)=>i));
+  displayOrder.forEach(originalIndex=>{
+    const label=document.createElement("label");label.className="option pdf-choice";
+    const input=document.createElement("input");
+    input.type=pdfCurrent.k.length>1&&!pdfCurrent.order?"checkbox":"radio";
+    input.name="pdf-answer";input.value=originalIndex;
+    const number=document.createElement("span");number.className="order-number hidden";
+    const text=document.createElement("span");text.textContent=pdfCurrent.a[originalIndex];
+    label.append(input,number,text);box.append(label);
+    label.onclick=e=>{
+      if(pdfLocked)return;
+      if(pdfCurrent.order){
+        e.preventDefault();
+        if(pdfSequence.includes(originalIndex))return;
+        pdfSequence.push(originalIndex);number.textContent=pdfSequence.length;
+        number.classList.remove("hidden");label.classList.add("selected");
+        input.checked=true;
+      }else if(pdfCurrent.k.length===1){
+        gradePdf([originalIndex]);
+      }
+    };
+  });
+  $("pdfNext").textContent=pdfPos===PDF_COUNT-1?"Končaj":"Naslednje";
+  scrollTo({top:0,behavior:"smooth"});
+}
+function gradePdf(selected){
+  if(pdfLocked)return;
+  if(!selected.length){alert("Izberi vsaj en odgovor.");return}
+  if(pdfCurrent.order&&selected.length!==pdfCurrent.a.length){alert("Razvrsti vse odgovore.");return}
+  pdfLocked=true;
+  const correct=pdfCurrent.k;
+  const ok=same(selected,correct);
+  [...$("pdfOptions").children].forEach(label=>{
+    const idx=+label.querySelector("input").value;
+    label.querySelector("input").disabled=true;
+    if(pdfCurrent.order){
+      const chosenPos=selected.indexOf(idx),correctPos=correct.indexOf(idx);
+      if(chosenPos===correctPos)label.classList.add("correct");else label.classList.add("wrong");
+    }else{
+      const chosen=selected.includes(idx),right=correct.includes(idx);
+      if(chosen&&right)label.classList.add("correct");
+      else if(chosen&&!right)label.classList.add("wrong");
+      else if(right)label.classList.add("correct");
+    }
+  });
+  const answer=pdfCurrent.order
+    ?correct.map((i,n)=>`${n+1}. ${pdfCurrent.a[i]}`).join(" → ")
+    :correct.map(i=>pdfCurrent.a[i]).join("; ");
+  $("pdfFeedback").className="feedback show "+(ok?"good":"bad");
+  $("pdfFeedbackTitle").textContent=ok?"Pravilno!":"Ni pravilno.";
+  $("pdfExplanation").innerHTML=(ok?"":`<strong>Pravilni odgovor${correct.length>1?"i":""}:</strong> ${escapeHtml(answer)}`);
+  $("pdfCheck").classList.add("hidden");$("pdfClear").classList.add("hidden");$("pdfNext").classList.remove("hidden");
+}
+$("startPdf").onclick=()=>{
+  pdfOrder=shuffle(Array.from({length:PDF_COUNT},(_,i)=>i));
+  pdfPos=0;
+  $("setup").classList.add("hidden");
+  $("pdfSetup").classList.add("hidden");
+  $("quiz").classList.add("hidden");
+  $("result").classList.add("hidden");
+  $("pdfQuiz").classList.remove("hidden");
+  showPdfQuestion();
+};
+$("pdfNext").onclick=()=>{if(pdfPos<PDF_COUNT-1){pdfPos++;showPdfQuestion()}else pdfHome()};
+$("pdfCheck").onclick=()=>{
+  const selected=pdfCurrent.order?pdfSequence:[...document.querySelectorAll('#pdfOptions input:checked')].map(x=>+x.value);
+  gradePdf(selected);
+};
+$("pdfClear").onclick=()=>{
+  pdfSequence=[];
+  [...$("pdfOptions").children].forEach(label=>{
+    label.classList.remove("selected");
+    label.querySelector("input").checked=false;
+    label.querySelector(".order-number").classList.add("hidden");
+  });
+};
+function pdfHome(){
+  $("pdfQuiz").classList.add("hidden");
+  $("setup").classList.remove("hidden");
+  $("pdfSetup").classList.remove("hidden");
+  scrollTo({top:0,behavior:"smooth"});
+}
+$("pdfBack").onclick=pdfHome;
 updateHome();
 </script>
 </body>
 </html>
-
-<script src=shuffle-fix.js></script>
